@@ -7,29 +7,107 @@
 <style>
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    margin: 0; background: linear-gradient(135deg,#667eea,#764ba2); 
-    color:#333;
+    margin: 0; 
+    background: linear-gradient(135deg, #667eea, #764ba2); 
+    color: #333;
 }
-.container { max-width: 1000px; margin:30px auto; background:#fff; padding:20px; border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.15);}
-h1 { text-align:center; margin-bottom:20px; }
-.topbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:15px;}
-select, button, input { padding:10px; margin:5px; border-radius:8px; border:1px solid #ccc; font-size:14px; transition:0.2s;}
-select:hover, input:hover { border-color:#667eea;}
-button { background:#667eea; color:white; cursor:pointer; font-weight:bold; border:none;}
-button:hover { background:#5a67d8;}
-table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-th { background:#667eea; color:white; padding:12px; text-transform:uppercase;}
-th, td { border:1px solid #ddd; padding:10px; text-align:center; transition:0.2s;}
-td.time { background:#eef; font-weight:bold; }
-td.editable { cursor:pointer; }
-td.editable:hover { background:#ddeeff;}
-.login { text-align:center; margin-top:120px; }
-.login h1 { margin-bottom:25px; font-size:32px; color:#fff; text-shadow:1px 1px 4px rgba(0,0,0,0.4);}
-@media(max-width:768px){ .topbar{flex-direction:column;} button, select, input{width:100%;} table{font-size:12px;} }
+
+.container { 
+    max-width: 1000px; 
+    margin: 30px auto; 
+    background: #fff; 
+    padding: 20px; 
+    border-radius: 15px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+}
+
+h1 { 
+    text-align: center; 
+    margin-bottom: 20px; 
+    color: #333;
+}
+
+.topbar { 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+select, button, input { 
+    padding: 10px; 
+    margin: 5px; 
+    border-radius: 8px; 
+    border: 1px solid #ccc; 
+    font-size: 14px; 
+    transition: 0.2s;
+}
+
+select:hover, input:hover { border-color: #667eea; }
+button { 
+    background: #667eea; 
+    color: white; 
+    cursor: pointer; 
+    font-weight: bold; 
+    border: none; 
+}
+button:hover { background: #5a67d8; }
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 15px; 
+    border-radius: 10px; 
+    overflow: hidden; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+th { 
+    background: #667eea; 
+    color: white; 
+    padding: 12px; 
+    text-transform: uppercase; 
+}
+
+th, td { 
+    border: 1px solid #ddd; 
+    padding: 10px; 
+    text-align: center; 
+    transition: 0.2s;
+}
+
+td.time { 
+    background: #eef; 
+    font-weight: bold; 
+}
+
+td.editable { 
+    cursor: pointer; 
+}
+
+td.editable:hover { 
+    background: #ddeeff; 
+}
+
+.login { 
+    text-align: center; 
+    margin-top: 120px; 
+}
+
+.login h1 { 
+    margin-bottom: 25px; 
+    font-size: 32px; 
+    color: #fff; 
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+}
+
+@media(max-width:768px){ 
+    .topbar{flex-direction:column;} 
+    button, select, input{width:100%;} 
+    table{font-size:12px;} 
+}
 </style>
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -78,45 +156,42 @@ td.editable:hover { background:#ddeeff;}
 </div>
 
 <script>
-// ===== Firebase =====
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ===== Роль =====
 let role = "student";
 
-// ===== Вход =====
+// ===== ВРЕМЯ ПАР =====
+function getTimes(){
+    const saved = localStorage.getItem("lesson_times");
+    return saved ? JSON.parse(saved) : ["09:00","10:05","11:10","12:15"];
+}
+
+function saveTimes(times){
+    localStorage.setItem("lesson_times", JSON.stringify(times));
+}
+
+// ===== ВХОД =====
 function enterStudent(){ role="student"; startApp(); }
 function enterTeacher(){
     if(document.getElementById("pass").value==="321"){ role="teacher"; startApp(); }
     else alert("Неверный пароль");
 }
-
 function startApp(){
     document.getElementById("login").style.display="none";
     document.getElementById("app").style.display="block";
-    document.getElementById("roleText").innerText = role==="teacher"?"Роль: преподаватель":"Роль: студент";
+    document.getElementById("roleText").innerText = role==="teacher" ? "Роль: преподаватель" : "Роль: студент";
     updateGroups();
 }
 
+// ===== ВЫХОД =====
 function logout(){
-    document.getElementById("app").style.display="none";
-    document.getElementById("login").style.display="block";
-    role="student";
-    document.getElementById("pass").value="";
+    document.getElementById("app").style.display = "none";
+    document.getElementById("login").style.display = "block";
+    role = "student";
+    document.getElementById("pass").value = "";
     document.getElementById("course").selectedIndex = 0;
     updateGroups();
 }
 
-// ===== Группы =====
+// ===== ГРУППЫ =====
 function updateGroups(){
     const groupSelect=document.getElementById("group");
     groupSelect.innerHTML="";
@@ -129,45 +204,34 @@ function updateGroups(){
     loadSchedule();
 }
 
-// ===== Время =====
-function getTimes(){ return ["09:00","10:05","11:10","12:15"]; }
-
-// ===== Ключ =====
+// ===== КЛЮЧ =====
 function getKey(){
     const c=document.getElementById("course").value;
     const g=document.getElementById("group").value;
-    return `course${c}_group${g}`;
+    return "schedule_"+c+"_"+g;
 }
 
-// ===== Firebase функции =====
-async function saveSchedule(schedule){
-    const key = getKey();
-    await db.collection("schedules").doc(key).set({data: schedule});
+// ===== ДЕФОЛТ =====
+function defaultSchedule(){
+    return getTimes().map(time=>[time,"","","","",""]);
 }
 
-async function loadSchedule(){
-    const key = getKey();
-    const doc = await db.collection("schedules").doc(key).get();
-    let data;
-    if(doc.exists){
-        data = doc.data().data;
-    } else {
-        data = getTimes().map(t=>[t,"","","","",""]);
-    }
-    renderTable(data);
-}
-
-function renderTable(data){
+// ===== ЗАГРУЗКА =====
+function loadSchedule(){
+    const key=getKey();
+    const saved=localStorage.getItem(key);
+    const data=saved ? JSON.parse(saved) : defaultSchedule();
     const tbody=document.querySelector("#table tbody");
     tbody.innerHTML="";
-    const days=["Пн","Вт","Ср","Чт","Пт"];
     data.forEach((row,rowIndex)=>{
         let tr=document.createElement("tr");
         row.forEach((cell,colIndex)=>{
             let td=document.createElement("td");
             td.innerText=cell;
-            if(colIndex===0) td.className="time";
-            else if(role==="teacher"){
+            if(colIndex===0){
+                td.className="time";
+                if(role==="teacher"){ td.classList.add("editable"); td.onclick=()=>editTime(td,rowIndex); }
+            } else if(role==="teacher"){
                 td.className="editable";
                 td.onclick=()=>editCell(td,rowIndex,colIndex);
             }
@@ -177,7 +241,7 @@ function renderTable(data){
     });
 }
 
-// ===== Редактирование =====
+// ===== РЕДАКТИРОВАНИЕ =====
 function editCell(td,rowIndex,colIndex){
     const input=document.createElement("input");
     input.value=td.innerText;
@@ -188,16 +252,43 @@ function editCell(td,rowIndex,colIndex){
     input.onblur=()=>saveCell(td,rowIndex,colIndex,input.value);
     input.onkeydown=e=>{if(e.key==="Enter") saveCell(td,rowIndex,colIndex,input.value);}
 }
-
-async function saveCell(td,rowIndex,colIndex,value){
+function saveCell(td,rowIndex,colIndex,value){
     td.innerText=value;
-    const key = getKey();
-    const doc = await db.collection("schedules").doc(key).get();
-    let schedule;
-    if(doc.exists) schedule = doc.data().data;
-    else schedule = getTimes().map(t=>[t,"","","","",""]);
-    schedule[rowIndex][colIndex] = value;
-    await saveSchedule(schedule);
+    const key=getKey();
+    let schedule=localStorage.getItem(key);
+    schedule=schedule ? JSON.parse(schedule) : defaultSchedule();
+    schedule[rowIndex][colIndex]=value;
+    localStorage.setItem(key,JSON.stringify(schedule));
+}
+
+// ===== РЕДАКТИРОВАНИЕ ВРЕМЕНИ =====
+function editTime(td,rowIndex){
+    const input=document.createElement("input");
+    input.value=td.innerText;
+    input.style.width="100%";
+    td.innerText="";
+    td.appendChild(input);
+    input.focus();
+    input.onblur=()=>saveTime(td,rowIndex,input.value);
+    input.onkeydown=e=>{if(e.key==="Enter") saveTime(td,rowIndex,input.value);}
+}
+function saveTime(td,rowIndex,value){
+    if(!/^[0-2]\d:[0-5]\d$/.test(value)){
+        alert("Неверный формат времени! Используйте HH:MM");
+        td.innerText=getTimes()[rowIndex];
+        return;
+    }
+    let times=getTimes();
+    times[rowIndex]=value;
+    saveTimes(times);
+
+    const key=getKey();
+    let schedule=localStorage.getItem(key);
+    schedule=schedule ? JSON.parse(schedule) : defaultSchedule();
+    schedule[rowIndex][0]=value;
+    localStorage.setItem(key,JSON.stringify(schedule));
+    td.innerText=value;
+    loadSchedule();
 }
 </script>
 
