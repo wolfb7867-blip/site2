@@ -3,30 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Расписание занятий</title>
+<title>Расписание занятий - Firebase</title>
 <style>
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #f0f4f8;
     color: #333;
 }
-
 .container {
-    max-width: 1000px;
+    max-width: 600px;
     margin: 20px auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    padding: 10px;
 }
-
 h1 {
     text-align: center;
     margin-bottom: 20px;
-    font-size: 24px;
 }
-
 .topbar {
     display: flex;
     flex-wrap: wrap;
@@ -35,7 +28,6 @@ h1 {
     margin-bottom: 15px;
     gap: 10px;
 }
-
 select, button, input {
     padding: 10px;
     margin: 5px 0;
@@ -43,78 +35,40 @@ select, button, input {
     border: 1px solid #ccc;
     font-size: 14px;
 }
-
 button {
     background: #667eea;
     color: white;
     cursor: pointer;
     transition: 0.3s;
 }
-button:hover {
-    background: #5a67d8;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-th {
-    background: #667eea;
-    color: white;
+button:hover { background: #5a67d8; }
+.card {
+    background: white;
+    border-radius: 12px;
     padding: 10px;
-    text-align: center;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-
-td {
-    border: 1px solid #ddd;
-    padding: 10px;
+.card.current { border: 2px solid #667eea; }
+.card-header { font-weight: bold; margin-bottom: 5px; }
+.card-days { display: flex; flex-wrap: wrap; gap: 5px; }
+.day {
+    flex: 1 1 18%;
+    background: #eef;
+    padding: 5px;
+    border-radius: 6px;
     text-align: center;
+    cursor: pointer;
     transition: 0.2s;
 }
-
-td.editable:hover {
-    background: #f0f8ff;
-    cursor: pointer;
-}
-
-td.time {
-    background: #eef;
-    font-weight: bold;
-}
-
-.login {
-    text-align: center;
-    margin-top: 100px;
-    color: white;
-}
-
-.login h1 {
-    font-size: 28px;
-    margin-bottom: 20px;
-}
-
-input:focus, select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 5px rgba(102,126,234,0.5);
-}
-
-@media(max-width:768px){
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    button, select, input {
-        width: 100%;
-    }
-    table {
-        font-size: 12px;
-    }
-}
+.day.editable:hover { background: #ddeeff; }
+.login { text-align: center; margin-top: 100px; color: #333; }
+.login h1 { margin-bottom: 20px; font-size: 28px; }
+@media(max-width:480px){ .day { flex: 1 1 40%; } }
 </style>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -126,55 +80,44 @@ input:focus, select:focus {
 </div>
 
 <div id="app" style="display:none;">
-    <div class="container">
-        <h1>📅 Расписание занятий</h1>
-        <div class="topbar">
-            <div>
-                <b id="roleText"></b><br>
-                <label>Курс:</label>
-                <select id="course" onchange="updateGroups()">
-                    <option value="1">1 курс</option>
-                    <option value="2">2 курс</option>
-                    <option value="3">3 курс</option>
-                    <option value="4">4 курс</option>
-                </select>
-                <label>Группа:</label>
-                <select id="group" onchange="loadSchedule()"></select>
-            </div>
-            <div>
-                <button onclick="logout()">Выйти</button>
-            </div>
-        </div>
-
-        <table id="table">
-            <thead>
-                <tr>
-                    <th>Время</th>
-                    <th>Пн</th>
-                    <th>Вт</th>
-                    <th>Ср</th>
-                    <th>Чт</th>
-                    <th>Пт</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+<div class="container">
+<h1>📅 Расписание занятий</h1>
+<div class="topbar">
+    <div>
+        <b id="roleText"></b><br>
+        <label>Курс:</label>
+        <select id="course" onchange="updateGroups()">
+            <option value="1">1 курс</option>
+            <option value="2">2 курс</option>
+            <option value="3">3 курс</option>
+            <option value="4">4 курс</option>
+        </select>
+        <label>Группа:</label>
+        <select id="group" onchange="loadSchedule()"></select>
     </div>
+    <div>
+        <button onclick="logout()">Выйти</button>
+    </div>
+</div>
+<div id="scheduleCards"></div>
+</div>
 </div>
 
 <script>
-let role = "student";
+// ==== Firebase Config ====
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-// ===== ВРЕМЯ ПАР =====
-function getTimes(){
-    const saved = localStorage.getItem("lesson_times");
-    return saved ? JSON.parse(saved) : ["09:00","10:05","11:10","12:15"];
-}
-function saveTimes(times){
-    localStorage.setItem("lesson_times", JSON.stringify(times));
-}
-
-// ===== ВХОД =====
+// ==== Вход ====
+let role="student";
 function enterStudent(){ role="student"; startApp(); }
 function enterTeacher(){
     if(document.getElementById("pass").value==="4321"){ role="teacher"; startApp(); }
@@ -183,12 +126,12 @@ function enterTeacher(){
 function startApp(){
     document.getElementById("login").style.display="none";
     document.getElementById("app").style.display="block";
-    document.getElementById("roleText").innerText = role==="teacher" ? "Роль: преподаватель" : "Роль: студент";
+    document.getElementById("roleText").innerText = role==="teacher"?"Роль: преподаватель":"Роль: студент";
     updateGroups();
 }
 function logout(){ location.reload(); }
 
-// ===== ГРУППЫ =====
+// ==== Группы ====
 function updateGroups(){
     const groupSelect=document.getElementById("group");
     groupSelect.innerHTML="";
@@ -201,92 +144,80 @@ function updateGroups(){
     loadSchedule();
 }
 
-// ===== КЛЮЧ =====
-function getKey(){
-    const c=document.getElementById("course").value;
-    const g=document.getElementById("group").value;
-    return "schedule_"+c+"_"+g;
+// ==== Время и расписание ====
+function getTimes(){ return ["09:00","10:05","11:10","12:15"]; }
+function defaultSchedule(){ 
+    return getTimes().map(t=>[t,"","","","",""]); 
+}
+function getKey(){ 
+    return `course${document.getElementById("course").value}_group${document.getElementById("group").value}`; 
 }
 
-// ===== ДЕФОЛТ =====
-function defaultSchedule(){
-    return getTimes().map(time=>[time,"","","","",""]);
+// ==== Firebase функции ====
+async function saveScheduleToFirebase(schedule){
+    const key = getKey();
+    await db.collection("schedules").doc(key).set({data: schedule});
 }
 
-// ===== ЗАГРУЗКА =====
-function loadSchedule(){
-    const key=getKey();
-    const saved=localStorage.getItem(key);
-    const data=saved ? JSON.parse(saved) : defaultSchedule();
-    const tbody=document.querySelector("#table tbody");
-    tbody.innerHTML="";
-    data.forEach((row,rowIndex)=>{
-        let tr=document.createElement("tr");
-        row.forEach((cell,colIndex)=>{
-            let td=document.createElement("td");
-            td.innerText=cell;
-            if(colIndex===0){
-                td.className="time";
-                if(role==="teacher"){ td.classList.add("editable"); td.onclick=()=>editTime(td,rowIndex); }
-            } else if(role==="teacher"){
-                td.className="editable";
-                td.onclick=()=>editCell(td,rowIndex,colIndex);
+async function loadScheduleFromFirebase(){
+    const key = getKey();
+    const doc = await db.collection("schedules").doc(key).get();
+    if(doc.exists){ return doc.data().data; }
+    else{ return defaultSchedule(); }
+}
+
+// ==== Загрузка и отрисовка ====
+async function loadSchedule(){
+    const data = await loadScheduleFromFirebase();
+    renderScheduleCards(data);
+}
+
+function renderScheduleCards(data){
+    const container=document.getElementById("scheduleCards");
+    container.innerHTML="";
+    const days=["Пн","Вт","Ср","Чт","Пт"];
+    data.forEach((row,i)=>{
+        const card=document.createElement("div");
+        card.className="card";
+        const header=document.createElement("div");
+        header.className="card-header";
+        header.innerText=row[0]+" – Пары";
+        card.appendChild(header);
+        const daysDiv=document.createElement("div");
+        daysDiv.className="card-days";
+        row.slice(1).forEach((cell,j)=>{
+            const d=document.createElement("div");
+            d.className="day";
+            d.innerText=days[j]+": "+cell;
+            if(role==="teacher"){ 
+                d.classList.add("editable"); 
+                d.onclick=()=>editCell(d,i,j+1);
             }
-            tr.appendChild(td);
+            daysDiv.appendChild(d);
         });
-        tbody.appendChild(tr);
+        card.appendChild(daysDiv);
+        container.appendChild(card);
     });
 }
 
-// ===== РЕДАКТИРОВАНИЕ ПРЕДМЕТОВ =====
-function editCell(td,rowIndex,colIndex){
+// ==== Редактирование ====
+function editCell(div,rowIndex,colIndex){
     const input=document.createElement("input");
-    input.value=td.innerText;
+    input.value=div.innerText.split(": ")[1];
     input.style.width="100%";
-    td.innerText="";
-    td.appendChild(input);
+    div.innerText="";
+    div.appendChild(input);
     input.focus();
-    input.onblur=()=>saveCell(td,rowIndex,colIndex,input.value);
-    input.onkeydown=e=>{if(e.key==="Enter") saveCell(td,rowIndex,colIndex,input.value);}
-}
-function saveCell(td,rowIndex,colIndex,value){
-    td.innerText=value;
-    const key=getKey();
-    let schedule=localStorage.getItem(key);
-    schedule=schedule ? JSON.parse(schedule) : defaultSchedule();
-    schedule[rowIndex][colIndex]=value;
-    localStorage.setItem(key,JSON.stringify(schedule));
+    input.onblur=()=>saveCell(div,rowIndex,colIndex,input.value);
+    input.onkeydown=e=>{if(e.key==="Enter") saveCell(div,rowIndex,colIndex,input.value);}
 }
 
-// ===== РЕДАКТИРОВАНИЕ ВРЕМЕНИ =====
-function editTime(td,rowIndex){
-    const input=document.createElement("input");
-    input.value=td.innerText;
-    input.style.width="100%";
-    td.innerText="";
-    td.appendChild(input);
-    input.focus();
-    input.onblur=()=>saveTime(td,rowIndex,input.value);
-    input.onkeydown=e=>{if(e.key==="Enter") saveTime(td,rowIndex,input.value);}
-}
-function saveTime(td,rowIndex,value){
-    if(!/^[0-2]\d:[0-5]\d$/.test(value)){
-        alert("Неверный формат времени! Используйте HH:MM");
-        td.innerText=getTimes()[rowIndex];
-        return;
-    }
-    let times=getTimes();
-    times[rowIndex]=value;
-    saveTimes(times);
-    const key=getKey();
-    let schedule=localStorage.getItem(key);
-    schedule=schedule ? JSON.parse(schedule) : defaultSchedule();
-    schedule[rowIndex][0]=value;
-    localStorage.setItem(key,JSON.stringify(schedule));
-    td.innerText=value;
-    loadSchedule();
+async function saveCell(div,rowIndex,colIndex,value){
+    div.innerText=value?value:"";
+    const schedule = await loadScheduleFromFirebase();
+    schedule[rowIndex][colIndex] = value;
+    await saveScheduleToFirebase(schedule);
 }
 </script>
-
 </body>
 </html>
