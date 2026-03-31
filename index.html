@@ -147,7 +147,7 @@ function updateGroups(){
 // ==== Время и расписание ====
 function getTimes(){ return ["09:00","10:05","11:10","12:15"]; }
 function defaultSchedule(){ 
-    return getTimes().map(t=>[t,"","","","",""]); 
+    return getTimes().map(t=>[t,"Нет пары","Нет пары","Нет пары","Нет пары","Нет пары"]); 
 }
 function getKey(){ 
     return `course${document.getElementById("course").value}_group${document.getElementById("group").value}`; 
@@ -161,9 +161,17 @@ async function saveScheduleToFirebase(schedule){
 
 async function loadScheduleFromFirebase(){
     const key = getKey();
-    const doc = await db.collection("schedules").doc(key).get();
-    if(doc.exists){ return doc.data().data; }
-    else{ return defaultSchedule(); }
+    try {
+        const doc = await db.collection("schedules").doc(key).get();
+        if(doc.exists){
+            const data = doc.data().data;
+            if(Array.isArray(data) && data.length > 0) return data;
+        }
+        return defaultSchedule();
+    } catch(e){
+        console.error("Ошибка загрузки расписания:", e);
+        return defaultSchedule();
+    }
 }
 
 // ==== Загрузка и отрисовка ====
@@ -213,9 +221,9 @@ function editCell(div,rowIndex,colIndex){
 }
 
 async function saveCell(div,rowIndex,colIndex,value){
-    div.innerText=value?value:"";
+    div.innerText=value?value:"Нет пары";
     const schedule = await loadScheduleFromFirebase();
-    schedule[rowIndex][colIndex] = value;
+    schedule[rowIndex][colIndex] = value?value:"Нет пары";
     await saveScheduleToFirebase(schedule);
 }
 </script>
