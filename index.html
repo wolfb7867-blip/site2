@@ -66,7 +66,6 @@ button:hover { background: #5a67d8; }
 .login h1 { margin-bottom: 20px; font-size: 28px; }
 @media(max-width:480px){ .day { flex: 1 1 40%; } }
 </style>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
@@ -118,9 +117,15 @@ const db = firebase.firestore();
 
 // ==== Вход ====
 let role="student";
-function enterStudent(){ role="student"; startApp(); }
+function enterStudent(){ 
+    role="student"; 
+    startApp(); 
+}
 function enterTeacher(){
-    if(document.getElementById("pass").value==="4321"){ role="teacher"; startApp(); }
+    if(document.getElementById("pass").value==="4321"){ 
+        role="teacher"; 
+        startApp(); 
+    }
     else alert("Неверный пароль");
 }
 function startApp(){
@@ -129,7 +134,16 @@ function startApp(){
     document.getElementById("roleText").innerText = role==="teacher"?"Роль: преподаватель":"Роль: студент";
     updateGroups();
 }
-function logout(){ location.reload(); }
+
+// ==== Выход ====
+function logout(){
+    document.getElementById("app").style.display = "none";
+    document.getElementById("login").style.display = "block";
+    role = "student";
+    document.getElementById("pass").value = "";
+    document.getElementById("course").selectedIndex = 0;
+    updateGroups();
+}
 
 // ==== Группы ====
 function updateGroups(){
